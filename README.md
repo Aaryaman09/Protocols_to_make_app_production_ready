@@ -470,6 +470,44 @@ The -p $HOST_PORT:$PORT option maps the container's port (specified by the PORT 
 
 So to answer your question: the value of $PORT is used in both the -e and -p options, but for different purposes. In the -e option, it sets the value of the PORT environment variable inside the container, while in the -p option, it specifies the port number that the Flask app will listen on inside the container. The value of $HOST_PORT, on the other hand, is used only in the -p option to specify the port number on the host machine that we want to use to access the Flask app.
 
+> Q : How to set environment port number using docker run command and will that port be used for both python flask and container to listen?
+
+A : You can set the environment variable for the port number using the -e option in the docker run command. Here's an example command that sets the port number to 8080:
+
+```python
+docker run -e PORT=8080 -p 8080:8080 my-flask-app
+```
+In this command, we're using the -e option to set the value of the PORT environment variable inside the container to 8080. We're also using the -p option to map port 8080 on the host machine to port 8080 inside the container.
+
+When you start the container with this command, the Flask app will listen on port 8080 inside the container, and the -p option will forward any requests that are made to port 8080 on the host machine to the Flask app running inside the container.
+
+So to answer your question: the port number that you set using the -e option will be used by the Flask app to listen for incoming requests inside the container, and it will also be the same port number that you use to access the Flask app from outside the container (via the -p option).
+
+> Q : Can i change local host port number in the last example to 9000?
+
+A : Yes, you can change the local host port number to 9000 by modifying the -p option in the docker run command. Here's an example command that maps port 9000 on the host machine to port 8080 inside the container:
+
+```
+docker run -e PORT=8080 -p 9000:8080 my-flask-app
+```
+
+In this command, we're using the -p option to map port 9000 on the host machine to port 8080 inside the container. The -e option sets the value of the PORT environment variable inside the container to 8080, which is the port number that the Flask app is listening on.
+
+When you start the container with this command, you can access the Flask app by going to http://localhost:9000 in your web browser. The -p option maps any requests that are made to port 9000 on the host machine to the Flask app running inside the container on port 8080.
+
+> Q : Should the value of -e PORT and container port number in -p be same always?
+
+A : The value of the -e option and the port number specified in the -p option do not have to be the same, but they should be related. Here's what each option does:
+
+1. -e PORT=<port number> sets the value of the PORT environment variable inside the container to <port number>.
+2. -p <host port>:<container port> maps the host port <host port> to the container port <container port>.
+
+If you want your Flask app to listen on a specific port inside the container, then you should set the value of PORT to that port number using the -e option. You should also specify that same port number as the container port in the -p option so that requests to that port on the host machine are forwarded to the Flask app running inside the container.
+
+For example, if you set -e PORT=8080 and -p 9000:8080, then the Flask app will listen on port 8080 inside the container and any requests to port 9000 on the host machine will be forwarded to the Flask app running inside the container on port 8080.
+
+So to summarize: the values of -e PORT and the container port specified in -p should be related and should be the same if you want your Flask app to listen on a specific port inside the container and be accessible from the host machine.
+
 ## Here's an example YAML file for a CircleCI pipeline that builds the Docker image, pushes it to Docker Hub, and deploys it to Heroku:
 
 ```yaml
