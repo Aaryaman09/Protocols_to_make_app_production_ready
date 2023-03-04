@@ -508,6 +508,95 @@ For example, if you set -e PORT=8080 and -p 9000:8080, then the Flask app will l
 
 So to summarize: the values of -e PORT and the container port specified in -p should be related and should be the same if you want your Flask app to listen on a specific port inside the container and be accessible from the host machine.
 
+> Q : create a dockerfile for a simple flask app using gunicorn with a dynamic environment port given during runtime. Also give docker run command
+
+A : Sure, here's a Dockerfile for a simple Flask app using Gunicorn that sets the port dynamically during runtime:
+
+```bash
+# Use an official Python runtime as a parent image
+FROM python:3.8-slim-buster
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Set the environment variable for the port
+ENV PORT=8000
+
+# Expose the port
+EXPOSE $PORT
+
+# Start the Gunicorn server
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:$PORT"]
+```
+
+In this Dockerfile, we set up a Python 3.8 runtime as the base image, set the working directory to /app, copy the contents of the current directory into the container, install the necessary packages, set the environment variable PORT to 8000, expose the port, and then start the Gunicorn server with the command gunicorn app:app -b 0.0.0.0:$PORT.
+
+To run this Docker image, you can use the following command:
+
+```
+docker run -p <host-port>:<container-port> -e PORT=<container-port> <image-name>
+```
+
+Replace <host-port> with the port number you want to use on your local machine, and <container-port> with the port number specified in the ENV PORT line in your Dockerfile. <image-name> should be the name you gave to your Docker image. For example:
+
+```
+docker run -p 8080:8000 -e PORT=8000 my-flask-app
+```
+
+This command will run your Docker image and map port 8080 on your local machine to port 8000 inside the container. The -e flag specifies the environment variable for the container port to use.
+
+> Q : What if i pass -e PORT=9000. will container port will be changed to 9000 or docker run command will fail?
+
+A : If you pass the -e PORT=9000 option when running the Docker container, the container port will be changed to 9000 instead of the default 8000 specified in the Dockerfile. The Gunicorn server will listen on port 9000 inside the container, and any requests to that port will be forwarded to your Flask app.
+
+So, in your docker run command, you can use -e PORT=9000 to set the environment variable for the container port to 9000. For example:
+
+```
+docker run -p 8080:9000 -e PORT=9000 my-flask-app
+```
+
+This command will run your Docker image and map port 8080 on your local machine to port 9000 inside the container. The -e flag specifies the environment variable for the container port to use, and in this case it's set to 9000. The my-flask-app argument is the name you gave to your Docker image.
+
+> Q : When is sh & -c is required in dockerfile CMD? 
+
+A : In a Dockerfile, the CMD instruction specifies the command that should be run when a container is started from the image. The CMD instruction can be specified in one of two ways:
+
+11. Shell form: In shell form, the command is specified as a string and is run using the default shell (/bin/sh -c on Linux or cmd /S /C on Windows). For example:
+
+```bash
+CMD echo "Hello, world!"
+```
+Exec form: In exec form, the command is specified as an array of strings and is run directly without a shell. For example:
+
+```
+CMD ["echo", "Hello, world!"]
+```
+
+In most cases, you can use either form of the CMD instruction without any issues. However, there are some cases where you might need to use the shell form with the -c option or the sh command.
+
+For example, if you want to run multiple commands in your CMD instruction, you can use the shell form with the -c option to run the commands as a single string:
+
+```
+CMD sh -c 'echo "Starting the server..." && python app.py'
+```
+
+This command will start the server by running two commands (echo "Starting the server..." and python app.py) in a single string.
+
+Another case where you might need to use the shell form is if you want to use environment variables in your command. For example, if you want to use the PORT environment variable in your command, you can use the shell form with the $PORT syntax:
+
+```
+CMD sh -c 'gunicorn app:app -b 0.0.0.0:$PORT'
+```
+This command will start the Gunicorn server with the PORT environment variable as the port number.
+
+In general, if you need to use any shell features such as pipes, environment variables, or command substitution in your CMD instruction, you should use the shell form with the -c option or the sh command.
+
 ## Here's an example YAML file for a CircleCI pipeline that builds the Docker image, pushes it to Docker Hub, and deploys it to Heroku:
 
 ```yaml
