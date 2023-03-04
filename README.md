@@ -483,6 +483,47 @@ CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
 
 This line specifies the command to run when the Docker container starts. In this case, we're using Gunicorn to run the Flask app, and we're passing in the **--bind** option to tell Gunicorn to bind to the IP address **0.0.0.0** (which means it will listen on all network interfaces) and the **$PORT** environment variable (which will be replaced with the actual port number at runtime). The **app:app** argument tells Gunicorn where to find the Flask app -- in this case, it's located in the **app.py** file and the **app** variable inside that file is the Flask app instance.
 
+> Q : what is ENV PORT=5000 and EXPOSE $PORT in our docker file and how are they different?
+
+A : ENV PORT=5000 and EXPOSE $PORT are both instructions in our Dockerfile that relate to the port number that the Flask app will listen on. However, they serve slightly different purposes.
+
+ENV PORT=5000 sets the default value of the PORT environment variable to 5000. This variable will be used to specify the port number that the Flask app listens on. By default, the Flask app will listen on port 5000 unless a different port number is specified at runtime.
+
+EXPOSE $PORT is used to indicate to Docker that the container will listen on the port number specified in the PORT environment variable. In our Dockerfile, we've set PORT to 5000, so EXPOSE $PORT is equivalent to EXPOSE 5000. This instruction doesn't actually publish the port to the host machine -- it's just a way of documenting which port the container is listening on.
+
+When we run the container, we can map the container's port to a port on the host machine using the -p option. For example, if we want to map the container's port 5000 to the host machine's port 8000, we can run the following command:
+
+```
+docker run -p 8000:5000 my-flask-app
+```
+
+This command tells Docker to start a container based on the my-flask-app image and map the container's port 5000 to the host machine's port 8000. Now, we can access the Flask app by visiting http://localhost:8000 in our web browser.
+
+> Q : in our docker file, why -e is used in docker run command?
+
+A : The -e option in the docker run command is used to set environment variables inside the Docker container. In our case, we're using the -e option to set the value of the PORT environment variable to a dynamic port number that is passed as a command-line argument when we run the container.
+
+Here's the full docker run command we're using:
+
+```
+docker run -p $HOST_PORT:$PORT -e PORT=$PORT my-flask-app
+```
+
+Let's break down what each part of the command does:
+
+-p $HOST_PORT:$PORT maps the container's port (specified by the PORT environment variable) to a port on the host machine (specified by the $HOST_PORT command-line argument).
+-e PORT=$PORT sets the value of the PORT environment variable inside the container to the value of the $PORT command-line argument.
+my-flask-app is the name of the Docker image that we want to run.
+By using the -e option to set the value of the PORT environment variable, we're making it possible to run the Flask app on a dynamic port number that can be specified at runtime. This is useful when deploying the app to a cloud platform like Heroku or Kubernetes, where the port number may not be known in advance.
+
+> Q : so -e PORT=$PORT port value is sent to $PORT in -p ?
+    
+A : In the docker run command, the -e PORT=$PORT option sets the value of the PORT environment variable inside the container to the value of the $PORT command-line argument. This means that the Flask app will listen on the port number specified by the $PORT argument.
+
+The -p $HOST_PORT:$PORT option maps the container's port (specified by the PORT environment variable) to a port on the host machine (specified by the $HOST_PORT command-line argument). The $HOST_PORT argument is a variable that we're passing in at runtime, and it specifies the port number on the host machine that we want to use to access the Flask app.
+
+So to answer your question: the value of $PORT is used in both the -e and -p options, but for different purposes. In the -e option, it sets the value of the PORT environment variable inside the container, while in the -p option, it specifies the port number that the Flask app will listen on inside the container. The value of $HOST_PORT, on the other hand, is used only in the -p option to specify the port number on the host machine that we want to use to access the Flask app.
+
 ## Here's an example YAML file for a CircleCI pipeline that builds the Docker image, pushes it to Docker Hub, and deploys it to Heroku:
 
 ```yaml
