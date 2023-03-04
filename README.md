@@ -39,3 +39,91 @@ These are the basic protocols and steps required to make a simple Flask applicat
 6. Set up backups and disaster recovery: It's important to have a plan for backing up and restoring your application data in case of data loss or other disasters. You can use tools like AWS Backup or Google Cloud Storage to automatically back up your data, and implement a disaster recovery plan to restore your application in case of a failure.
 
 These are just a few additional steps to consider when making a Flask application production and deployment ready. The specific steps you need to take will depend on your application's requirements, your deployment environment, and your organization's policies and best practices.
+
+Here's an example of creating a simple Flask application that is production-ready:
+
+1. Create a virtual environment: It's best practice to create a virtual environment to isolate your dependencies from your system's Python installation. You can create a virtual environment by running the following command:
+
+```javascript
+python3 -m venv myvenv
+```
+
+2. Activate the virtual environment: Activate the virtual environment by running the following command:
+
+```bash
+source myvenv/bin/activate
+```
+
+3. Install Flask: Install Flask using pip:
+
+```
+pip install flask
+```
+
+4. Create your Flask app: Create a file called **app.py** with the following code:
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello, World!'
+
+if __name__ == '__main__':
+    app.run()
+```
+
+5. Set up environment variables: Set up environment variables to store sensitive information like passwords and API keys. You can use the **python-dotenv** library to load environment variables from a **.env** file. Install the library by running:
+
+```
+pip install python-dotenv
+```
+
+Then create a **.env** file with the following content:
+
+```makefile
+SECRET_KEY=your_secret_key_here
+DATABASE_URL=your_database_url_here
+```
+
+In your **app.py** file, you can load environment variables by adding the following code:
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app.secret_key = os.getenv('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+```
+
+6. Use HTTPS: It's essential to use HTTPS to secure your application. You can use the **flask-sslify** library to redirect HTTP requests to HTTPS. Install the library by running:
+
+```
+pip install flask-sslify
+```
+
+Then add the following code to your **app.py** file:
+
+```python
+from flask_sslify import SSLify
+
+sslify = SSLify(app)
+```
+
+7. Use Gunicorn: Gunicorn is a production-ready web server that can handle multiple requests concurrently. Install Gunicorn by running:
+
+```
+pip install gunicorn
+```
+
+Then start your Flask app using Gunicorn by running:
+
+```
+gunicorn app:app
+```
+
+With these steps, you can create a production-ready Flask application.
