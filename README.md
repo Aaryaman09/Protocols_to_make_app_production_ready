@@ -40,7 +40,7 @@ These are the basic protocols and steps required to make a simple Flask applicat
 
 These are just a few additional steps to consider when making a Flask application production and deployment ready. The specific steps you need to take will depend on your application's requirements, your deployment environment, and your organization's policies and best practices.
 
-Here's an example of creating a simple Flask application that is production-ready:
+## Point 1: Here's an example of creating a simple Flask application that is production-ready:
 
 1. Create a virtual environment: It's best practice to create a virtual environment to isolate your dependencies from your system's Python installation. You can create a virtual environment by running the following command:
 
