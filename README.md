@@ -267,7 +267,7 @@ You can replace the log levels and messages with your own messages.
 
 By configuring the logger in your Flask app, you can capture useful information about your app's behavior and troubleshoot issues that may arise in production. You can also configure log rotation to manage log files and prevent them from consuming too much disk space.
 
-## Here's an updated Dockerfile that uses Gunicorn to run the Flask app:
+## Here's an Dockerfile that uses Gunicorn to run the Flask app:
 
 ```Dockerfile
 # Use an official Python runtime as a parent image
