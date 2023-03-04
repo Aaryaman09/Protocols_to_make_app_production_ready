@@ -425,6 +425,20 @@ docker run -p 8000:5000 -e PORT=5000 myflaskapp
 
 This will start the container and forward port 8000 to your local machine, allowing you to access the Flask app in your web browser at http://localhost:8000.
 
+The **sh** and **-c** options in the **CMD** instruction are used to execute a shell command inside the Docker container.
+
+The **sh** option specifies the shell program to use for executing the command. In this case, it's the default shell program, which is usually Bash or another compatible shell.
+
+The **-c** option specifies that the following argument is a shell command to execute. In our Dockerfile, we're using the **CMD** instruction to specify the Gunicorn command to run the Flask app. By using the **-c** option, we're telling Docker to execute this command in a shell inside the container.
+
+So the CMD instruction in our Dockerfile essentially translates to the following shell command:
+
+```python
+sh -c 'gunicorn --bind 0.0.0.0:$PORT app:app'
+```
+
+This command uses the shell program (sh) to execute the Gunicorn command with the specified options and arguments. The **$PORT** environment variable is expanded to its actual value at runtime, thanks to the use of the $ symbol in front of the variable name.
+
 ## Here's a detailed explanation of each line in the Dockerfile:
 
 ```
@@ -468,3 +482,157 @@ CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
 ```
 
 This line specifies the command to run when the Docker container starts. In this case, we're using Gunicorn to run the Flask app, and we're passing in the **--bind** option to tell Gunicorn to bind to the IP address **0.0.0.0** (which means it will listen on all network interfaces) and the **$PORT** environment variable (which will be replaced with the actual port number at runtime). The **app:app** argument tells Gunicorn where to find the Flask app -- in this case, it's located in the **app.py** file and the **app** variable inside that file is the Flask app instance.
+
+## Here's an example YAML file for a CircleCI pipeline that builds the Docker image, pushes it to Docker Hub, and deploys it to Heroku:
+
+```yaml
+version: 2.1
+
+orbs:
+  heroku: circleci/heroku@1.0.5
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.9-buster
+    steps:
+      - checkout
+      - run: docker build -t your-dockerhub-username/flask-app:latest .
+      - run: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - run: docker push your-dockerhub-username/flask-app:latest
+  deploy:
+    docker:
+      - image: circleci/python:3.9-buster
+    steps:
+      - checkout
+      - heroku/install
+      - run:
+          name: Deploy to Heroku
+          command: heroku container:release web -a your-heroku-app-name
+    requires:
+      - build
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+```
+
+Here's a brief explanation of each section of the YAML file:
+
+1. version: This specifies the version of the CircleCI pipeline syntax to use.
+
+2. orbs: This defines a reusable set of configuration elements, or "orbs", that can be included in multiple pipelines. In this case, we're using the heroku orb to simplify the deployment to Heroku.
+
+3. jobs: This defines one or more named jobs that can be run as part of the pipeline. In this case, we have two jobs: build and deploy.
+
+4. build: This job builds the Docker image, pushes it to Docker Hub, and stores it for use in the deploy job. It uses the official circleci/python Docker image as the build environment, checks out the code from the repository, builds the Docker image with docker build, logs in to Docker Hub with the $DOCKERHUB_USERNAME and $DOCKERHUB_PASSWORD environment variables, and pushes the image to Docker Hub.
+
+5. deploy: This job deploys the Docker image to Heroku. It also uses the circleci/python Docker image as the build environment, checks out the code from the repository, installs the Heroku CLI with the heroku/install step, and deploys the Docker image to Heroku with the heroku container:release command.
+
+6. requires: This specifies that the deploy job depends on the build job, meaning that the build job must complete successfully before the deploy job can run.
+
+7. filters: This specifies that the deploy job should only run on the main branch.
+
+8. workflows: This defines one or more named workflows that specify the jobs to run and the order in which to run them. In this case, we have a single workflow called build-and-deploy that runs the build job followed by the deploy job, but only on the main branch.
+
+## Here's a more detailed explanation of each section of the YAML file:
+
+```makefile
+version: 2.1
+```
+
+This line specifies the version of the CircleCI pipeline syntax to use. In this case, we're using version 2.1.
+
+```yaml
+orbs:
+  heroku: circleci/heroku@1.0.5
+```
+
+This section defines a reusable set of configuration elements, or "orbs", that can be included in multiple pipelines. In this case, we're using the heroku orb to simplify the deployment to Heroku. The circleci/heroku@1.0.5 refers to the version of the heroku orb to use.
+
+```yaml
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.9-buster
+    steps:
+      - checkout
+      - run: docker build -t your-dockerhub-username/flask-app:latest .
+      - run: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - run: docker push your-dockerhub-username/flask-app:latest
+```
+
+This section defines one named job, build, that builds the Docker image and pushes it to Docker Hub.
+
+The docker section specifies the Docker image to use as the build environment. In this case, we're using the official circleci/python Docker image with Python version 3.9 and the Debian Buster operating system.
+
+The steps section defines the individual steps to run in the job.
+
+The checkout step checks out the code from the repository.
+
+The docker build step builds the Docker image with the name your-dockerhub-username/flask-app:latest.
+
+The docker login step logs in to Docker Hub using the $DOCKERHUB_USERNAME and $DOCKERHUB_PASSWORD environment variables.
+
+The docker push step pushes the Docker image to Docker Hub with the name your-dockerhub-username/flask-app:latest.
+
+```yaml
+  deploy:
+    docker:
+      - image: circleci/python:3.9-buster
+    steps:
+      - checkout
+      - heroku/install
+      - run:
+          name: Deploy to Heroku
+          command: heroku container:release web -a your-heroku-app-name
+    requires:
+      - build
+```
+
+This section defines one named job, deploy, that deploys the Docker image to Heroku.
+
+The docker section specifies the Docker image to use as the build environment. In this case, we're using the same official circleci/python Docker image as in the build job.
+
+The steps section defines the individual steps to run in the job.
+
+The checkout step checks out the code from the repository.
+
+The heroku/install step installs the Heroku CLI.
+
+The run step runs the heroku container:release command to deploy the Docker image to the Heroku app with the name your-heroku-app-name.
+
+The requires section specifies that the deploy job depends on the build job, meaning that the build job must complete successfully before the deploy job can run.
+
+```yaml
+workflows:
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+```
+
+The workflows section defines a single workflow with the name build-and-deploy. This workflow consists of two jobs, build and deploy, which will run in the order specified.
+
+The build job is defined earlier in the YAML file and builds the Docker image.
+
+The deploy job is also defined earlier in the YAML file and deploys the Docker image to Heroku.
+
+The requires keyword under deploy specifies that the deploy job depends on the build job, meaning that the build job must complete successfully before the deploy job can run.
+
+The filters keyword under deploy specifies the conditions that must be met for the deploy job to run. In this case, the deploy job will only run if changes are made to the main branch of the repository.
+
+Overall, the workflows section enables us to define the order and conditions for running multiple jobs, which allows us to automate the build and deployment process with CircleCI.
+
