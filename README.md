@@ -1,6 +1,6 @@
 # Protocols to make app production ready:
 
-##Here are the protocols and steps required to follow to make a simple Flask application production and deployment ready:
+## Here are the protocols and steps required to follow to make a simple Flask application production and deployment ready:
 
 1. Set up a virtual environment: Create a virtual environment using a tool like venv or conda to ensure that your application has its own isolated environment with all the dependencies it needs.
 
