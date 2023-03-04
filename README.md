@@ -597,6 +597,78 @@ This command will start the Gunicorn server with the PORT environment variable a
 
 In general, if you need to use any shell features such as pipes, environment variables, or command substitution in your CMD instruction, you should use the shell form with the -c option or the sh command.
 
+> Q : create a dockerfile for a simple flask app using gunicorn with a dynamic environment port 9000 given during runtime with default environment port as 8000 and local host port as 9500. Also give docker run command
+
+A : Sure, here's a Dockerfile for a simple Flask app using Gunicorn with dynamic environment port:
+
+```bash
+FROM python:3.9-slim-buster
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV PORT=8000
+EXPOSE $PORT
+
+CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+```
+
+This Dockerfile sets up a Python 3.9 slim image as the base, installs necessary dependencies, sets the working directory to /app, and copies the requirements.txt and the entire contents of the current directory to /app. The environment variable PORT is set to a default value of 8000, and the container's $PORT is exposed. Finally, the container runs the Gunicorn command with the app:app option.
+
+To run this container, you can use the following command:
+
+```
+docker run -p 9500:8000 -e PORT=9000 <image-name>
+```
+
+This command maps the container's port 8000 to the host's port 9500, and sets the environment variable PORT to 9000. <image-name> should be replaced with the name of the image you built from the Dockerfile.
+
+
+> Q : Here how are PORT=9000 and ENV PORT=8000 related in the last example?
+
+A : In the last example, PORT=9000 and ENV PORT=8000 are related in that they are both defining the value of the PORT environment variable, but with different values.
+
+The ENV PORT=8000 line in the Dockerfile sets the default value of the PORT environment variable to 8000. This means that if the PORT environment variable is not set when the container is started, it will default to 8000.
+
+The docker run command includes the option -e PORT=9000, which sets the value of the PORT environment variable to 9000 when the container is started. This overrides the default value set in the Dockerfile and sets the PORT environment variable to 9000 instead of the default 8000.
+
+> Q : So why is it written 8000 in position of docker container port in docker run command, since i have passed dynamic environment port as 9000 on docker run in the last example?
+
+A : In the last example, 8000 is written in the position of the Docker container port in the docker run command because the EXPOSE instruction in the Dockerfile exposes the container port 8000. This tells Docker that the container will be listening on port 8000.
+
+When you start the container with docker run -p 9500:8000 -e PORT=9000 <image-name>, the -p 9500:8000 option maps the host port 9500 to the container port 8000. This means that you can access the Flask app in the container by going to http://localhost:9500.
+
+The dynamic environment port 9000 that you passed in the docker run command sets the PORT environment variable to 9000 within the container, which the Flask app code uses to listen on the specified port.
+
+So even though the container is listening on port 8000, the Flask app running inside the container is using the PORT environment variable to determine which port to listen on, and in this case it will listen on port 9000.
+
+> Q : So how are port 8000 and port 9000 related after docker run command in the last example?
+
+A : In the last example, port 8000 and port 9000 are related in that port 8000 is the port that is exposed by the Docker container and port 9000 is the port that the Flask app inside the container is actually listening on.
+
+When you start the container with the command docker run -p 9500:8000 -e PORT=9000 <image-name>, the -p 9500:8000 option maps the host port 9500 to the container port 8000. This means that you can access the Flask app in the container by going to http://localhost:9500.
+
+Inside the container, the Flask app is actually listening on the port specified by the PORT environment variable, which is set to 9000 by the -e PORT=9000 option in the docker run command. So even though the container is listening on port 8000, the Flask app is actually listening on port 9000.
+
+This allows you to run multiple instances of the Flask app on the same host machine, each with its own dynamically assigned port specified by the PORT environment variable. The docker run command maps the container's port 8000 to a different host port for each instance, so they can all run simultaneously without port conflicts.
+
+> Q : In the last example, we have given a dynamic port using -e then why CMD file of docker is not using sh and -c?
+
+A : In the last example, we have set the dynamic port using the -e option in the docker run command to set the PORT environment variable inside the container. However, the CMD instruction in the Dockerfile does not use sh or -c to set the PORT environment variable dynamically because the value of the environment variable is already set by the docker run command using the -e option.
+
+The CMD instruction in the Dockerfile specifies the command that should be run when the container is started. In this case, it specifies the command gunicorn --bind 0.0.0.0:$PORT app:app, which starts the Gunicorn server and binds it to the port specified by the PORT environment variable.
+
+Since the value of the PORT environment variable is set by the docker run command using the -e option, the value is already available when the container starts. Therefore, there is no need to use sh or -c to set the PORT environment variable dynamically in the CMD instruction. The value is already set and can be used directly in the CMD instruction as $PORT.
+
 ## Here's an example YAML file for a CircleCI pipeline that builds the Docker image, pushes it to Docker Hub, and deploys it to Heroku:
 
 ```yaml
