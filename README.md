@@ -367,3 +367,104 @@ docker run -p 5000:5000 myflaskapp
 ```
 
 This will start the container and forward port 5000 to your local machine, allowing you to access the Flask app in your web browser at http://localhost:5000.
+
+## To expose the application on a dynamically assigned port, you can modify the **CMD** line in the Dockerfile to use the **PORT** environment variable that's set at runtime.
+
+Here's the updated **Dockerfile**:
+
+```Dockerfile
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim-buster
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Set the environment variable for Gunicorn
+ENV PORT=5000
+
+# Expose the port that will be used by the Flask app
+EXPOSE $PORT
+
+# Run the command to start the Flask app using Gunicorn
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app"]
+```
+
+The changes are as follows:
+
+1. The **ENV PORT=5000** line sets the default port to 5000, but it can be overridden at runtime.
+
+2. The **EXPOSE** line now uses the $PORT variable to dynamically expose the port that will be used by the Flask app.
+
+3. The **CMD** line has been modified to run a shell script that sets the PORT environment variable and starts the Flask app using Gunicorn.
+
+To build the Docker image, navigate to the directory containing the Dockerfile and run the following command:
+
+```
+docker build -t myflaskapp .
+```
+
+This will build the Docker image with the tag **myflaskapp**. You can then run the Docker container using the following command:
+
+```
+docker run -p <external_port>:<internal_port> -e PORT=<internal_port> myflaskapp
+```
+
+Replace **<external_port>** with the port number you want to use to access the Flask app from your local machine, and **<internal_port>** with the port number you want to use for the Flask app inside the Docker container (which should match the value of the **PORT** environment variable).
+
+For example, if you want to expose the app on port **8000** on your local machine and use port 5000 inside the container, you would run:
+
+```python
+docker run -p 8000:5000 -e PORT=5000 myflaskapp
+```
+
+This will start the container and forward port 8000 to your local machine, allowing you to access the Flask app in your web browser at http://localhost:8000.
+
+## Here's a detailed explanation of each line in the Dockerfile:
+
+```
+FROM python:3.9-slim-buster
+```
+
+This line specifies the base image to use for the Docker container. In this case, we're using the official Python 3.9 slim image, which is a lightweight version of the Python runtime environment based on the Debian Buster operating system.
+
+```bash
+WORKDIR /app
+```
+
+This line sets the working directory inside the Docker container to /app. This is where we'll copy the Flask app code and any other files needed by the app.
+
+```bash
+COPY . /app
+```
+
+This line copies the current directory (i.e., the directory containing the Dockerfile) into the Docker container at the /app directory. This will include the Flask app code and any other files needed by the app, such as the requirements.txt file.
+
+```python
+RUN pip install --no-cache-dir -r requirements.txt
+```
+
+This line runs the pip install command inside the Docker container to install the dependencies listed in the requirements.txt file. The --no-cache-dir option tells pip not to use the cache, which helps keep the Docker image size smaller.
+
+```
+ENV PORT=5000
+```
+
+This line sets the default value of the PORT environment variable to 5000. This variable will be used to specify the port number that the Flask app listens on.
+
+```bash
+EXPOSE 5000
+```
+
+This line specifies that the Docker container should listen on port 5000. Note that this doesn't actually publish the port to the host machine -- we'll do that later when we run the container.
+
+```bash
+CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+```
+
+This line specifies the command to run when the Docker container starts. In this case, we're using Gunicorn to run the Flask app, and we're passing in the **--bind** option to tell Gunicorn to bind to the IP address **0.0.0.0** (which means it will listen on all network interfaces) and the **$PORT** environment variable (which will be replaced with the actual port number at runtime). The **app:app** argument tells Gunicorn where to find the Flask app -- in this case, it's located in the **app.py** file and the **app** variable inside that file is the Flask app instance.
