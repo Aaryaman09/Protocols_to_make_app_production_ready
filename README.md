@@ -267,60 +267,6 @@ You can replace the log levels and messages with your own messages.
 
 By configuring the logger in your Flask app, you can capture useful information about your app's behavior and troubleshoot issues that may arise in production. You can also configure log rotation to manage log files and prevent them from consuming too much disk space.
 
-## Here's an example Dockerfile for the Flask app we created earlier:
-
-```Dockerfile
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim-buster
-
-# Set the working directory to /app
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Set the environment variable for Flask
-ENV FLASK_APP=app.py
-
-# Expose port 5000 for Flask app
-EXPOSE 5000
-
-# Run the command to start the Flask app
-CMD ["flask", "run", "--host=0.0.0.0"]
-```
-
-Let's go through each of the steps:
-
-1. **FROM python:3.9-slim-buster**: Use the official Python 3.9 slim-buster image as the base image.
-
-2. **WORKDIR /app**: Set the working directory to **/app**.
-
-3. **COPY . /app**: Copy the current directory (which includes **app.py**, **requirements.txt**, and any other files needed for the app) into the container at **/app**.
-
-4. **RUN pip install --no-cache-dir -r requirements.txt**: Install the dependencies specified in **requirements.txt**. We use **--no-cache-dir** to avoid caching the packages and making the image smaller.
-
-5. **ENV FLASK_APP=app.py**: Set the environment variable **FLASK_APP** to **app.py**, which is the name of our Flask app.
-
-6. **EXPOSE 5000**: Expose port 5000, which is the port used by the Flask app.
-
-7. **CMD ["flask", "run", "--host=0.0.0.0"]**: Start the Flask app by running the command **flask run** and passing the **--host=0.0.0.0** flag to allow connections from outside the container.
-
-To build the Docker image, navigate to the directory containing the Dockerfile and run the following command:
-
-```
-docker build -t myflaskapp .
-```
-This will build the Docker image with the tag **myflaskapp**. You can then run the Docker container using the following command:
-
-```
-docker run -p 5000:5000 myflaskapp
-```
-
-This will start the container and forward port 5000 to your local machine, allowing you to access the Flask app in your web browser at **http://localhost:5000**.
-
 ## Here's an updated Dockerfile that uses Gunicorn to run the Flask app:
 
 ```Dockerfile
